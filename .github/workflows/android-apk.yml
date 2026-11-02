@@ -29,13 +29,48 @@ jobs:
         run: npx cap add android
       - name: Sincronizar proyecto Android
         run: npx cap sync android
+      - name: Incorporar logo definitivo DChicken al icono Android
+        run: |
+          curl --fail --silent --show-error --location --retry 3 https://dchicken-express-control.vercel.app/icon-512.png --output dchicken-icon.png
+          python3 -m pip install --user --disable-pip-version-check 'Pillow==11.3.0'
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          source=Image.open('dchicken-icon.png').convert('RGBA')
+          assert source.size==(512,512),f'icono inesperado {source.size}'
+          res=Path('android/app/src/main/res')
+          factors={'mdpi':1,'hdpi':1.5,'xhdpi':2,'xxhdpi':3,'xxxhdpi':4}
+          for density,factor in factors.items():
+              folder=res/('mipmap-'+density)
+              folder.mkdir(parents=True,exist_ok=True)
+              normal=round(48*factor)
+              source.resize((normal,normal),Image.Resampling.LANCZOS).save(folder/'ic_launcher.png')
+              source.resize((normal,normal),Image.Resampling.LANCZOS).save(folder/'ic_launcher_round.png')
+              foreground_size=round(108*factor)
+              glyph_size=round(72*factor)
+              canvas=Image.new('RGBA',(foreground_size,foreground_size),(0,0,0,0))
+              glyph=source.resize((glyph_size,glyph_size),Image.Resampling.LANCZOS)
+              inset=(foreground_size-glyph_size)//2
+              canvas.alpha_composite(glyph,(inset,inset))
+              canvas.save(folder/'ic_launcher_foreground.png')
+          adaptive=res/'mipmap-anydpi-v26'
+          adaptive.mkdir(parents=True,exist_ok=True)
+          xml='''<?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+          <background android:drawable="@android:color/black" />
+          <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+          </adaptive-icon>'''
+          (adaptive/'ic_launcher.xml').write_text(xml)
+          (adaptive/'ic_launcher_round.xml').write_text(xml)
+          print('Logo DChicken aplicado en las 5 densidades Android')
+          PY
       - name: Compilar APK de prueba
         working-directory: android
         run: bash ./gradlew assembleDebug --no-daemon
-      - name: Guardar APK descargable
+      - name: Guardar APK con logo definitivo
         uses: actions/upload-artifact@v4
         with:
-          name: DChicken-Android-APK
+          name: DChicken-Android-APK-Logo-Nuevo
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
