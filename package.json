@@ -1,0 +1,20 @@
+{
+  "name": "dchicken-express-android-shell",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android test shell for DChicken Express stable production PWA",
+  "scripts": {
+    "android:init": "npx cap add android",
+    "android:sync": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.6.0",
+    "@capacitor/android": "8.6.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
