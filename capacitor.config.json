@@ -1,0 +1,12 @@
+{
+  "appId": "pe.dchicken.expresscontrol",
+  "appName": "DChicken Express",
+  "webDir": "www",
+  "server": {
+    "url": "https://dchicken-express-control.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
