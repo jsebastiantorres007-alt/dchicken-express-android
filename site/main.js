@@ -235,8 +235,20 @@
     }
     e.currentTarget.href = waLink();
   });
-  cart?.querySelector(".cart-clear")?.addEventListener("click", () => {
-    if (!confirm("¿Vaciar todo el pedido?")) return;
+  // Vaciar en dos toques (sin ventanas del navegador, que algunos visores bloquean).
+  let clearArmed = 0;
+  cart?.querySelector(".cart-clear")?.addEventListener("click", (e) => {
+    const b = e.currentTarget;
+    if (Date.now() - clearArmed > 3000) {
+      clearArmed = Date.now();
+      b.textContent = "Toca otra vez para vaciar";
+      setTimeout(() => {
+        if (Date.now() - clearArmed >= 2900) b.textContent = "Vaciar pedido";
+      }, 3000);
+      return;
+    }
+    clearArmed = 0;
+    b.textContent = "Vaciar pedido";
     state.items = {};
     save();
     paintAll();
