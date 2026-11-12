@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "installCommand": "echo sin-dependencias",
+  "buildCommand": "python3 build.py",
+  "outputDirectory": "site",
+  "headers": [
+    { "source": "/(index.html)?", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/(img|fonts)/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000" }] }
+  ]
+}
