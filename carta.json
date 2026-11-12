@@ -1,0 +1,173 @@
+{
+  "nota": "Carta completa según la carta impresa (nov. 2026). Sin tápers descartables ni cócteles, a pedido del dueño. Precios en soles; null = precio por confirmar.",
+  "destacados": [
+    {"id": "oferta-1", "name": "Oferta 1", "desc": "1 pollo a la brasa + gaseosa 1½ L + papas fritas + ensalada + cremas", "price": 66},
+    {"id": "oferta-2", "name": "Oferta 2", "desc": "1 pollo a la brasa + ¼ de pollo solo + papas fritas + ensalada + cremas", "price": 66},
+    {"id": "oferta-3", "name": "Oferta 3", "desc": "1 pollo a la brasa + ½ pollo solo + papas fritas + ensalada + cremas + gaseosa 1½ L", "price": 88},
+    {"id": "combo-express", "name": "Combo Express", "desc": "2 pollos a la brasa + 2 porciones de papas fritas + 2 ensaladas + cremas + gaseosa 1½ L", "price": 119},
+    {"id": "alitas-aji", "name": "Alitas al ají", "desc": "Con papas fritas", "price": 19},
+    {"id": "alitas-bbq", "name": "Alitas BBQ", "desc": "Con papas fritas", "price": 19},
+    {"id": "alitas-maracuya", "name": "Alitas de maracuyá", "desc": "Con papas fritas", "price": 19},
+    {"id": "alitas-acevichadas", "name": "Alitas acevichadas", "desc": "Con papas fritas", "price": 19},
+    {"id": "broaster-acevichado", "name": "Broaster acevichado", "desc": "Precio por confirmar", "price": null}
+  ],
+  "categorias": [
+    {
+      "id": "c-pollos", "chip": "Pollos", "title": "Pollos a la brasa", "kicker": "Del horno ecológico",
+      "photo": "pollos", "alt": "Pollo a la brasa entero en plato blanco",
+      "items": [
+        {"id": "cuarto-pollo", "name": "¼ de pollo", "desc": "Papas fritas crocantes, ensalada y cremas", "price": 16},
+        {"id": "cuarto-tallarin-verde", "name": "¼ de pollo con tallarines verdes", "desc": "", "price": 22},
+        {"id": "medio-pollo", "name": "½ pollo", "desc": "Papas fritas crocantes, ensalada y cremas", "price": 31},
+        {"id": "medio-pollo-chaufa", "name": "½ pollo + porción de chaufa", "desc": "Papas fritas crocantes, ensalada y cremas", "price": 37},
+        {"id": "pollo-entero", "name": "1 pollo", "desc": "Papas fritas crocantes, ensalada y cremas", "price": 59},
+        {"id": "pollo-solo", "name": "1 pollo (solo)", "desc": "", "price": 45},
+        {"id": "mostrito", "name": "Mostrito", "desc": "⅛ de pollo, papas fritas y arroz chaufa; ensalada y cremas aparte", "price": 14},
+        {"id": "mostro", "name": "Mostro", "desc": "¼ de pollo, papas fritas crocantes, ensalada y cremas", "price": 18}
+      ]
+    },
+    {
+      "id": "c-parrillas", "chip": "Parrillas", "title": "Parrillas", "kicker": "A la brasa",
+      "photo": "parrillas", "alt": "Brochetas y anticuchos en la parrilla",
+      "items": [
+        {"id": "carretillero", "name": "Carretillero", "desc": "1 palito de anticucho + 1 brocheta + mollejitas + papas fritas + ensalada", "price": 29},
+        {"id": "anticuchos", "name": "Anticuchos", "desc": "2 palitos de anticucho + papas fritas + ensalada", "price": 21},
+        {"id": "brocheta-pollo", "name": "Brocheta de pollo", "desc": "2 brochetas de pollo + papas fritas + ensalada", "price": 20},
+        {"id": "rachi", "name": "Rachi a la parrilla", "desc": "Rachi + papas fritas + ensalada", "price": 24},
+        {"id": "mollejitas", "name": "Mollejitas a la parrilla", "desc": "Mollejitas + papas fritas + ensalada", "price": 22},
+        {"id": "anticucho-rachi", "name": "Anticucho + rachi", "desc": "Papas fritas + ensalada", "price": 24},
+        {"id": "duo-anticucho-mollejitas", "name": "Dúo anticucho + mollejitas", "desc": "Papas fritas + ensalada", "price": 24},
+        {"id": "mixto-parrilla", "name": "Mixto a la parrilla", "desc": "2 palitos de anticucho + mollejita + rachi + papas fritas + ensalada", "price": 40},
+        {"id": "mixto-especial", "name": "Mixto especial a la parrilla", "desc": "1 palito de anticucho + 1 brocheta + mollejita + rachi + 1 chorizo + papas fritas + ensalada", "price": 45}
+      ]
+    },
+    {
+      "id": "c-ofertas-parrilla", "chip": "Ofertas parrilleras", "title": "Ofertas de parrillas", "kicker": "Para compartir",
+      "photo": "parrilla-familiar", "alt": "Parrilla familiar con chuleta, pollo, chorizo y brochetas",
+      "items": [
+        {"id": "oferta-anticuchera", "name": "Oferta anticuchera", "desc": "¼ de pollo a la brasa + 1 palito de anticucho + papas fritas + ensalada + gaseosa 296 ml", "price": 26},
+        {"id": "oferta-chorizo", "name": "Oferta con chorizo", "desc": "¼ de pollo a la brasa + chorizo + papas fritas + ensalada + gaseosa 296 ml", "price": 26},
+        {"id": "parrilla-familiar-1", "name": "Parrilla familiar 1", "desc": "1 chuleta + ¼ de pollo a la brasa + 2 anticuchos + 2 brochetas de pollo + rachi + mollejitas + chorizo + papas fritas + ensalada", "price": 88},
+        {"id": "parrilla-familiar-2", "name": "Parrilla familiar 2", "desc": "1 chuleta + ½ pollo a la brasa + 2 anticuchos + 2 brochetas de pollo + rachi + mollejitas + chorizo + papas fritas + ensalada", "price": 98},
+        {"id": "parrilla-familiar-3", "name": "Parrilla familiar 3", "desc": "1 churrasco + ½ pollo a la brasa + 2 anticuchos + 2 brochetas de pollo + rachi + mollejitas + chorizo + papas fritas + ensalada", "price": 100}
+      ]
+    },
+    {
+      "id": "c-criollos", "chip": "Criollos", "title": "Criollos", "kicker": "De la casa",
+      "photo": "criollos", "alt": "Lomo saltado con arroz y papas fritas",
+      "items": [
+        {"id": "lomo-saltado", "name": "Lomo saltado", "desc": "", "price": 22},
+        {"id": "pollo-saltado", "name": "Pollo saltado", "desc": "", "price": 20},
+        {"id": "tallarin-saltado-pollo", "name": "Tallarín saltado de pollo", "desc": "", "price": 19},
+        {"id": "tallarin-saltado-carne", "name": "Tallarín saltado de carne", "desc": "", "price": 20},
+        {"id": "filete-pollo-plancha", "name": "Filete de pollo a la plancha", "desc": "", "price": 21},
+        {"id": "churrasco", "name": "Churrasco", "desc": "Con papas fritas y arroz", "price": 21},
+        {"id": "chuleta", "name": "Chuleta", "desc": "Con papas fritas y arroz", "price": 19},
+        {"id": "bisteck", "name": "Bisteck", "desc": "Con papas fritas y arroz", "price": 21},
+        {"id": "tallarin-verde-bisteck", "name": "Tallarín verde con bisteck", "desc": "", "price": 22},
+        {"id": "tallarin-verde-churrasco", "name": "Tallarín verde con churrasco", "desc": "", "price": 21},
+        {"id": "tallarin-verde-chuleta", "name": "Tallarín verde con chuleta", "desc": "", "price": 20},
+        {"id": "tallarin-verde-pollo", "name": "Tallarín verde con pollo a la plancha", "desc": "", "price": 22}
+      ]
+    },
+    {
+      "id": "c-chaufa", "chip": "Chaufa y tallarines", "title": "Chaufa y tallarines", "kicker": "Chifa",
+      "photo": "chaufa", "alt": "Arroz chaufa de pollo",
+      "items": [
+        {"id": "chaufa-pollo", "name": "Chaufa de pollo", "desc": "", "price": 16},
+        {"id": "chaufa-chancho", "name": "Chaufa de chancho", "desc": "", "price": 18},
+        {"id": "chaufa-mixto", "name": "Chaufa mixto", "desc": "Carne + pollo", "price": 20},
+        {"id": "chaufa-carne", "name": "Chaufa de carne", "desc": "", "price": 19},
+        {"id": "chaufa-especial", "name": "Chaufa especial", "desc": "Pollo + carne + chancho + langostinos", "price": 24},
+        {"id": "chaufa-salvaje-pollo", "name": "Chaufa salvaje de pollo", "desc": "Pollo + verduras", "price": 19},
+        {"id": "chaufa-salvaje-chancho", "name": "Chaufa salvaje de chancho", "desc": "Chancho + verduras", "price": 20},
+        {"id": "chaufa-salvaje-carne", "name": "Chaufa salvaje de carne", "desc": "Carne + verduras", "price": 21},
+        {"id": "chaufa-salvaje-mixto", "name": "Chaufa salvaje mixto", "desc": "Pollo + carne + verduras", "price": 22},
+        {"id": "chaufa-pollo-trozos", "name": "Chaufa con pollo en trozos", "desc": "", "price": 22},
+        {"id": "tallarin-pollo", "name": "Tallarín de pollo", "desc": "Con porción de chaufa", "price": 18},
+        {"id": "tallarin-chancho", "name": "Tallarín con chancho", "desc": "Con porción de chaufa", "price": 20},
+        {"id": "tallarin-pollo-trozos", "name": "Tallarín con pollo en trozos", "desc": "Con porción de chaufa", "price": 22},
+        {"id": "tallarin-carne", "name": "Tallarín con carne", "desc": "Con porción de chaufa", "price": 21},
+        {"id": "tipakay", "name": "Tipakay", "desc": "Salsa de tamarindo + pollo + verduras + porción de chaufa", "price": 20}
+      ]
+    },
+    {
+      "id": "c-chifa", "chip": "Platos chifa", "title": "Platos chifa", "kicker": "Con porción de chaufa",
+      "photo": "chifa", "alt": "Plato chifa con chancho y verduras",
+      "items": [
+        {"id": "chijaukay", "name": "Chijaukay", "desc": "Salsa base + pollo + verduras + porción de chaufa", "price": 20},
+        {"id": "frejolitos-pollo", "name": "Frejolitos con pollo", "desc": "Frejolitos con verduras + pollo + porción de chaufa", "price": 19},
+        {"id": "pollo-brocoli", "name": "Pollo en trozos con brócoli", "desc": "Brócoli con verduras + pollo en trozos + porción de chaufa", "price": 23},
+        {"id": "pollo-tamarindo", "name": "Pollo con tamarindo", "desc": "Salsa de tamarindo + pollo + porción de chaufa", "price": 19},
+        {"id": "chancho-tamarindo", "name": "Chancho con tamarindo", "desc": "Salsa de tamarindo + chancho + porción de chaufa", "price": 20},
+        {"id": "combinado-pollo", "name": "Combinado de pollo", "desc": "Tallarín + verduras + pollo + porción de chaufa", "price": 19},
+        {"id": "combinado-carne", "name": "Combinado de carne", "desc": "Tallarín + verduras + carne + porción de chaufa", "price": 21},
+        {"id": "combinado-mixto", "name": "Combinado mixto", "desc": "Tallarín + verduras + pollo + carne + porción de chaufa", "price": 20},
+        {"id": "aeropuerto-pollo", "name": "Aeropuerto de pollo", "desc": "Pollo", "price": 19},
+        {"id": "aeropuerto-chancho", "name": "Aeropuerto de chancho", "desc": "Chancho", "price": 20},
+        {"id": "aeropuerto-mixto", "name": "Aeropuerto mixto", "desc": "Pollo + carne", "price": 21},
+        {"id": "aeropuerto-especial", "name": "Aeropuerto especial", "desc": "Pollo + carne + chancho + langostino", "price": 24},
+        {"id": "aeropuerto-carne", "name": "Aeropuerto con carne", "desc": "Carne", "price": 22},
+        {"id": "pollo-verduras", "name": "Pollo con verduras", "desc": "Verduras + pollo + porción de chaufa", "price": 19},
+        {"id": "chancho-verduras", "name": "Chancho con verduras", "desc": "Verduras + chancho + porción de chaufa", "price": 20},
+        {"id": "carne-verduras", "name": "Carne con verduras", "desc": "Verduras + carne + porción de chaufa", "price": 21}
+      ]
+    },
+    {
+      "id": "c-sopas", "chip": "Sopas", "title": "Sopas", "kicker": "Calientitas",
+      "photo": "sopas", "alt": "Sopa a la minuta con huevo",
+      "items": [
+        {"id": "sustancia-pollo", "name": "Sustancia de pollo", "desc": "", "price": 16},
+        {"id": "sopa-minuta", "name": "Sopa a la minuta", "desc": "", "price": 18},
+        {"id": "sopa-wantan", "name": "Sopa wantán", "desc": "", "price": 15},
+        {"id": "sopa-wantan-especial", "name": "Sopa wantán especial", "desc": "", "price": 18}
+      ]
+    },
+    {
+      "id": "c-guarniciones", "chip": "Guarniciones", "title": "Guarniciones", "kicker": "Para acompañar",
+      "photo": "guarniciones", "alt": "Porción de arroz chaufa",
+      "items": [
+        {"id": "ensalada-1", "name": "Porción de ensalada", "desc": "", "price": 7},
+        {"id": "ensalada-media", "name": "½ porción de ensalada", "desc": "", "price": 5},
+        {"id": "ensalada-cuarto", "name": "¼ porción de ensalada", "desc": "", "price": 2.5},
+        {"id": "papas-1", "name": "Porción de papas fritas", "desc": "", "price": 12},
+        {"id": "papas-media", "name": "½ porción de papas fritas", "desc": "", "price": 7},
+        {"id": "arroz-blanco", "name": "Porción de arroz blanco", "desc": "", "price": 4},
+        {"id": "arroz-chaufa", "name": "Porción de arroz chaufa", "desc": "", "price": 6},
+        {"id": "crema-4oz", "name": "Táper de crema de 4 onzas", "desc": "", "price": 3},
+        {"id": "huevo-frito", "name": "Huevo frito", "desc": "", "price": 2}
+      ]
+    },
+    {
+      "id": "c-bebidas", "chip": "Bebidas", "title": "Bebidas", "kicker": "Jarras, gaseosas y frozen",
+      "photo": "bebidas", "alt": "Jarras de chicha morada y maracuyá",
+      "groups": [
+        {"name": "Jarras", "items": [
+          {"id": "chicha-1l", "name": "Jarra de chicha morada 1 L", "desc": "", "price": 10},
+          {"id": "chicha-medio", "name": "Jarra de chicha morada ½ L", "desc": "", "price": 5},
+          {"id": "maracuya-1l", "name": "Jarra de maracuyá 1 L", "desc": "", "price": 10},
+          {"id": "maracuya-medio", "name": "Jarra de maracuyá ½ L", "desc": "", "price": 5}
+        ]},
+        {"name": "Gaseosas y agua", "items": [
+          {"id": "inca-15", "name": "Inca Kola 1½ L", "desc": "", "price": 8.5},
+          {"id": "coca-15", "name": "Coca Cola 1½ L", "desc": "", "price": 8.5},
+          {"id": "inca-1", "name": "Inca Kola 1 L", "desc": "", "price": 6.5},
+          {"id": "coca-1", "name": "Coca Cola 1 L", "desc": "", "price": 6.5},
+          {"id": "inca-gordita", "name": "Inca Kola gordita", "desc": "", "price": 4.5},
+          {"id": "inca-600", "name": "Inca Kola descartable 600 ml", "desc": "", "price": 4.5},
+          {"id": "inca-296", "name": "Inca Kola personal 296 ml", "desc": "", "price": 2.5},
+          {"id": "coca-296", "name": "Coca Cola personal 296 ml", "desc": "", "price": 2.5},
+          {"id": "agua-625", "name": "Agua mineral 625 ml", "desc": "", "price": 3}
+        ]},
+        {"name": "Frozen", "items": [
+          {"id": "limonada-frozen-1l", "name": "Jarra de limonada frozen 1 L", "desc": "", "price": 15},
+          {"id": "limonada-frozen-medio", "name": "Jarra de limonada frozen ½ L", "desc": "", "price": 8},
+          {"id": "maracuya-frozen-1l", "name": "Jarra de maracuyá frozen 1 L", "desc": "", "price": 15},
+          {"id": "maracuya-frozen-medio", "name": "Jarra de maracuyá frozen ½ L", "desc": "", "price": 8},
+          {"id": "chicha-frozen-1l", "name": "Jarra de chicha morada frozen 1 L", "desc": "", "price": 15},
+          {"id": "chicha-frozen-medio", "name": "Jarra de chicha morada frozen ½ L", "desc": "", "price": 8}
+        ]}
+      ]
+    }
+  ]
+}
