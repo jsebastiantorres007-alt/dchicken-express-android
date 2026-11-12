@@ -8,8 +8,7 @@
     {"id": "alitas-aji", "name": "Alitas al ají", "desc": "Con papas fritas", "price": 19},
     {"id": "alitas-bbq", "name": "Alitas BBQ", "desc": "Con papas fritas", "price": 19},
     {"id": "alitas-maracuya", "name": "Alitas de maracuyá", "desc": "Con papas fritas", "price": 19},
-    {"id": "alitas-acevichadas", "name": "Alitas acevichadas", "desc": "Con papas fritas", "price": 19},
-    {"id": "broaster-acevichado", "name": "Broaster acevichado", "desc": "Precio por confirmar", "price": null}
+    {"id": "alitas-acevichadas", "name": "Alitas acevichadas", "desc": "Con papas fritas", "price": 19}
   ],
   "categorias": [
     {
