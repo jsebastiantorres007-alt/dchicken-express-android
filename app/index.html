@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#12100e" id="meta-theme">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="application-name" content="D’Chicken Express">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="D’Chicken">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="Administración privada de D’Chicken Express: lista de mercado, compras, caja, bancos, pollos y SUNAT.">
+  
+  <link rel="preload" href="./fonts/brasa-text.woff" as="font" crossorigin>
+  <link rel="preload" href="./fonts/brasa-display.woff" as="font" crossorigin>
+  <title>D’Chicken Express Control</title>
+  <link rel="stylesheet" href="./app.css?v=18">
+  <script>try{if(localStorage.getItem("dchicken_theme_v8")!=="light")document.documentElement.dataset.theme="dark"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+</head>
+<body>
+  <div id="app">Abriendo D’Chicken Express…</div>
+  <div id="cloud-overlay" hidden></div>
+  <script>
+window.DCHICKEN_CONFIG={supabaseUrl:'https://dhtlwxxnevozditkoxkx.supabase.co',publishableKey:'sb_publishable_k8SMedBQj6KsZxi5srOeBA_mFfIwhLx'};
+
+</script>
+  <script src="./cloud.js?v=18"></script>
+  <script src="./app.js?v=18"></script>
+  
+<script>if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}))}</script>
+</body>
+</html>
