@@ -8,7 +8,15 @@
   <meta name="theme-color" content="#12100e">
   <meta property="og:title" content="D’Chicken Express · Pollo a la brasa">
   <meta property="og:description" content="Horno ecológico de leña, carbón y gas. Pide por WhatsApp al 904 558 521.">
-  <meta property="og:image" content="img/hero-pollo.jpg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dchicken-express.vercel.app/">
+  <meta property="og:locale" content="es_PE">
+  <meta property="og:image" content="https://dchicken-express.vercel.app/img/hero-pollo.jpg">
+  <meta property="og:image:width" content="1122">
+  <meta property="og:image:height" content="745">
+  <meta property="og:image:alt" content="Pollo a la brasa de D’Chicken Express">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://dchicken-express.vercel.app/">
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <link rel="preload" href="fonts/display.woff" as="font" type="font/woff" crossorigin>
@@ -52,7 +60,7 @@
       </div>
       <div class="hero-shade" aria-hidden="true"></div>
       <div class="hero-copy">
-        <p class="kicker"><span class="dot" aria-hidden="true"></span>Comas · Todos los días, 12 m. a 11 p. m.</p>
+        <p class="kicker"><span class="dot" aria-hidden="true"></span><span data-open-status>Comas · Todos los días, 12 m. a 11 p. m.</span></p>
         <h1 id="hero-title" class="display hero-title">
           <span class="line"><span>Pollo a</span></span>
           <span class="line"><span>la <em>brasa</em></span></span>
@@ -201,25 +209,6 @@
       <p class="hero-note">Imagen referencial</p>
     </section>
 
-    <!-- Horno y clásico -->
-    <section class="oven wrap" aria-labelledby="horno-title">
-      <div class="oven-copy reveal">
-        <p class="eyebrow">Horno ecológico</p>
-        <h2 id="horno-title" class="display oven-title">Menos humo.<br><span>Más sabor.</span></h2>
-        <p class="body-lg">Nuestro horno combina leña, carbón y gas: el pollo se dora parejo y se queda jugoso por dentro.</p>
-        <ul class="fuel" role="list">
-          <li>Leña</li>
-          <li>Carbón</li>
-          <li>Gas</li>
-        </ul>
-      </div>
-      <a class="stamp reveal" href="https://wa.me/51904558521?text=Hola%20D%E2%80%99Chicken%2C%20quiero%20pedir%201%2F4%20de%20pollo%20(S%2F16)" data-add="cuarto-pollo" aria-label="Agregar un cuarto de pollo, 16 soles, al pedido">
-        <span class="stamp-top">¼ de pollo</span>
-        <span class="stamp-price"><small>S/</small>16</span>
-        <span class="stamp-sub">con papas, ensalada y cremas</span>
-      </a>
-    </section>
-
     <!-- Carta completa: la genera build.py desde carta.json -->
 <!-- CARTA:START -->
 <section class="carta" id="carta" aria-labelledby="carta-title">
@@ -351,6 +340,7 @@
   <dialog class="cart" id="cart" aria-labelledby="cart-title">
     <div class="cart-in">
       <header class="cart-head">
+        <span class="cart-grab" aria-hidden="true"></span>
         <h2 id="cart-title" class="display">Tu pedido</h2>
         <button class="cart-x" type="button" data-close-cart aria-label="Cerrar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </header>
@@ -374,9 +364,10 @@
         </div>
       </div>
       <footer class="cart-foot">
+        <p class="cart-hours" data-hours hidden></p>
         <a class="btn btn-red btn-lg cart-send" href="https://wa.me/51904558521" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.6a8.6 8.6 0 0 1-12.7 7.5L3 21l1.9-5.1A8.6 8.6 0 1 1 21 11.6z"/></svg>
-          <span>Enviar pedido por WhatsApp</span>
+          <span data-send-label>Enviar pedido por WhatsApp</span>
         </a>
         <button class="cart-clear" type="button">Vaciar pedido</button>
       </footer>

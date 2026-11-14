@@ -41,8 +41,57 @@
   const pending = () => lines().some(([id]) => CAT[id].p === null);
   const totalText = () => money(total()) + (pending() ? " +" : "");
 
+  // ── Horario: siempre con la hora de Lima, aunque el celular tenga otra zona ──
+  const OPEN = 12 * 60,
+    CLOSE = 23 * 60,
+    LAST_CALL = 30;
+  function limaMinutes() {
+    try {
+      const p = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "America/Lima",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).formatToParts(new Date());
+      const v = (t) => Number(p.find((x) => x.type === t).value);
+      return v("hour") * 60 + v("minute");
+    } catch (e) {
+      const d = new Date();
+      return d.getHours() * 60 + d.getMinutes();
+    }
+  }
+  function hours() {
+    const t = limaMinutes();
+    if (t < OPEN) return { open: false, when: "hoy" };
+    if (t >= CLOSE) return { open: false, when: "mañana" };
+    return { open: true, left: CLOSE - t };
+  }
+  function paintHours() {
+    const h = hours();
+    const status = $("[data-open-status]");
+    if (status)
+      status.textContent = h.open
+        ? "Abierto ahora · hasta las 11 p. m."
+        : `Cerrado ahora · abrimos ${h.when} a las 12 m.`;
+    $(".hero .dot")?.classList.toggle("open", h.open);
+    $(".hero .dot")?.classList.toggle("closed", !h.open);
+    const note = cart && $("[data-hours]", cart);
+    if (note) {
+      if (!h.open) {
+        note.innerHTML = `<b>Ahora estamos cerrados.</b> Abrimos ${h.when} a las 12 m. Puedes dejar tu pedido y te respondemos apenas abramos.`;
+        note.hidden = false;
+      } else if (h.left <= LAST_CALL) {
+        note.innerHTML = `<b>Cerramos a las 11 p. m.</b> (en ${h.left} min). Envía tu pedido pronto.`;
+        note.hidden = false;
+      } else note.hidden = true;
+      const label = $("[data-send-label]", cart);
+      if (label) label.textContent = h.open ? "Enviar pedido por WhatsApp" : "Dejar pedido por WhatsApp";
+    }
+  }
+
   function message() {
     const out = ["Hola D’Chicken, quiero hacer este pedido:", ""];
+    if (!hours().open) out.splice(1, 0, "(Lo envío fuera de horario: es para cuando abran.)");
     for (const [id, q] of lines()) {
       const it = CAT[id];
       out.push(`• ${q} × ${it.n} — ${it.p === null ? "precio por confirmar" : money(Math.round(it.p * q * 100) / 100)}`);
@@ -146,10 +195,11 @@
     addedTimer = setTimeout(() => added.classList.remove("show"), 1800);
   }
   function bump(el) {
-    if (reduce || !el) return;
-    el.classList.remove("pop");
-    void el.offsetWidth;
-    el.classList.add("pop");
+    if (reduce || !el || !el.animate) return;
+    el.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], {
+      duration: 220,
+      easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+    });
   }
 
   function change(id, d, src) {
@@ -163,7 +213,6 @@
       announce(`Agregado: ${CAT[id].n} · ${count()} en tu pedido`);
       bump($(".cart-btn .count"));
       bump($(".dock-n"));
-      if (src && !src.closest(".cart")) bump(src.closest(".add, .offer-cta, .btn, .stamp, .wing a") || src);
     }
   }
 
@@ -197,16 +246,94 @@
     $('[name="nombre"]', cart).value = state.nombre;
     $('[name="nota"]', cart).value = state.nota;
     for (const r of $$('[name="entrega"]', cart)) r.checked = r.value === state.entrega;
+    paintHours();
+    cart.classList.remove("closing", "dismissing");
     if (typeof cart.showModal === "function") cart.showModal();
     else cart.setAttribute("open", "");
     document.body.classList.add("cart-open");
   }
-  function closeCart() {
-    if (!cart?.open) return;
+  function finishClose() {
+    cart.classList.remove("closing", "dismissing", "dragging");
+    cart.style.transform = "";
+    cart.style.transition = "";
+    cart.style.animation = "";
     if (typeof cart.close === "function") cart.close();
     else cart.removeAttribute("open");
     document.body.classList.remove("cart-open");
   }
+  let closeTimer;
+  function closeCart() {
+    if (!cart?.open || cart.classList.contains("closing")) return;
+    if (reduce) return finishClose();
+    cart.classList.add("closing");
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(finishClose, 260); // por si animationend no llega
+    cart.addEventListener(
+      "animationend",
+      () => {
+        clearTimeout(closeTimer);
+        finishClose();
+      },
+      { once: true },
+    );
+  }
+  // Esc también cierra con animación.
+  cart?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeCart();
+  });
+
+  paintHours();
+  setInterval(paintHours, 60000);
+
+  // ── Deslizar hacia abajo para cerrar (celular) ──
+  const sheetMQ = window.matchMedia("(max-width: 719px)");
+  const head = cart && $(".cart-head", cart);
+  let drag = null;
+  const rubber = (x) => (x * 40) / (40 + x); // resistencia si se jala hacia arriba
+  head?.addEventListener("pointerdown", (e) => {
+    if (!sheetMQ.matches || drag || e.button > 0 || e.target.closest("button, a")) return;
+    drag = { id: e.pointerId, y: e.clientY, dy: 0, hist: [[performance.now(), e.clientY]] };
+    try {
+      head.setPointerCapture(e.pointerId);
+    } catch (err) {}
+    cart.classList.add("dragging");
+    cart.style.animation = "none";
+    cart.style.transition = "none";
+  });
+  head?.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const raw = e.clientY - drag.y;
+    drag.dy = raw >= 0 ? raw : -rubber(-raw);
+    drag.hist.push([performance.now(), e.clientY]);
+    if (drag.hist.length > 6) drag.hist.shift();
+    cart.style.transform = `translateY(${drag.dy}px)`;
+  });
+  const endDrag = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const [t0, y0] = drag.hist[0],
+      [t1, y1] = drag.hist[drag.hist.length - 1];
+    const v = t1 > t0 ? (y1 - y0) / (t1 - t0) : 0; // px por ms
+    const dy = drag.dy;
+    drag = null;
+    cart.classList.remove("dragging");
+    if (dy > 120 || (v > 0.11 && dy > 12)) {
+      // Se va desde donde está, sin saltos.
+      cart.classList.add("dismissing");
+      cart.style.transition = "transform 200ms cubic-bezier(0.23, 1, 0.32, 1)";
+      cart.style.transform = "translateY(100%)";
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(finishClose, 240);
+    } else {
+      cart.style.transition = "transform 300ms cubic-bezier(0.32, 0.72, 0, 1)";
+      cart.style.transform = "";
+      setTimeout(() => {
+        if (!drag) cart.style.transition = "";
+      }, 320);
+    }
+  };
+  head?.addEventListener("pointerup", endDrag);
+  head?.addEventListener("pointercancel", endDrag);
   cart?.addEventListener("close", () => document.body.classList.remove("cart-open"));
   cart?.addEventListener("click", (e) => {
     if (e.target === cart) closeCart(); // tocar fuera de la hoja
@@ -233,6 +360,7 @@
       announce("Escribe tu dirección para el delivery");
       return;
     }
+    paintHours();
     e.currentTarget.href = waLink();
   });
   // Vaciar en dos toques (sin ventanas del navegador, que algunos visores bloquean).
