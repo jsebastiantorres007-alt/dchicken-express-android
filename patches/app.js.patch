@@ -1,0 +1,456 @@
+#base 3ca22d816aa71987a76cff31eb18ff7ef7cff99f d19b4ffe7f30d4ae7afa8deef3f9dba8cdf708a4
+@@ 112 1 3
+    shoppingPick = null,
+    shoppingGroup = false;
+  const shoppingSel = new Set();
+@@ 734 0 13
+    if (horizon === 3 && (!window.DChickenCloud?.isActive() || window.DChickenCloud.isAdmin())) {
+      let last = "";
+      try {
+        last = localStorage.getItem(BACKUP_KEY) || "";
+      } catch (e) {}
+      if (!last || last < plusDays(now, -7))
+        out.push({
+          type: "respaldo",
+          date: now,
+          title: "Descarga el respaldo semanal",
+          description: last ? "Último: " + nice(last) + ". Guárdalo fuera del celular (Drive o correo)." : "Aún no descargas ninguno en este dispositivo.",
+        });
+    }
+@@ 736 0 1
+  const BACKUP_KEY = "dchicken_last_backup_v17";
+@@ 739 0 82
+  }
+  // Historial de cambios (solo administrador). Lee la auditoría automática de la nube.
+  const audit = { rows: null, loading: false, error: "", onlyLate: true };
+  const AUDIT_SECTION = {
+    closures: "Cierre de caja",
+    expenses: "Gasto",
+    chickens: "Pollos",
+    purchases: "Compra",
+    payments: "Pago",
+    sunat: "SUNAT",
+    historical: "Personal / local",
+    bankSettings: "Saldo de banco",
+    bankTransactions: "Movimiento de banco",
+    shoppingLists: "Lista de compras",
+    alertSettings: "Alerta de stock",
+    sales: "Ventas por producto",
+  };
+  const AUDIT_FIELDS = [
+    ["system", "Total sistema"],
+    ["cash", "Efectivo"],
+    ["yape", "Yape"],
+    ["pos", "POS"],
+    ["amount", "Importe"],
+    ["total", "Total"],
+    ["qty", "Cantidad"],
+    ["concept", "Concepto"],
+    ["sold", "Vendidos"],
+    ["stockInitial", "Stock inicial"],
+    ["date", "Fecha"],
+  ];
+  function loadAudit() {
+    if (audit.loading || !window.DChickenCloud?.auditLog) return;
+    audit.loading = true;
+    window.DChickenCloud.auditLog()
+      .then((rows) => {
+        audit.rows = rows;
+        audit.error = "";
+      })
+      .catch((e) => {
+        audit.error = e.message || "No se pudo leer el historial.";
+      })
+      .finally(() => {
+        audit.loading = false;
+        if (page === "cambios") render();
+      });
+  }
+  function auditPage() {
+    if (!window.DChickenCloud?.isActive() || !window.DChickenCloud.isAdmin())
+      return card("Historial de cambios", "Inicia sesión como administrador para ver el historial.");
+    if (!audit.rows && !audit.error) {
+      loadAudit();
+      return card("Historial de cambios", '<div class="empty">Cargando el historial…</div>');
+    }
+    if (audit.error) return card("Historial de cambios", `<div class="alert">${esc(audit.error)}</div>`);
+    const limaDay = (iso) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima" }).format(new Date(iso));
+    const limaTime = (iso) =>
+      new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit" }).format(
+        new Date(iso),
+      );
+    const rows = audit.rows.map((r) => {
+      const p = r.new_payload || r.old_payload || {};
+      const changedOn = limaDay(r.changed_at);
+      const late = !!p.date && p.date < plusDays(changedOn, -1);
+      const diffs =
+        r.action === "UPDATE"
+          ? AUDIT_FIELDS.filter(([k]) => JSON.stringify(r.old_payload?.[k]) !== JSON.stringify(r.new_payload?.[k]))
+              .map(([k, l]) => `${l}: ${esc(String(r.old_payload?.[k] ?? "—"))} → <b>${esc(String(r.new_payload?.[k] ?? "—"))}</b>`)
+              .join("<br>")
+          : "";
+      return { r, p, changedOn, late, diffs };
+    });
+    const shown = audit.onlyLate ? rows.filter((x) => x.late || x.r.action === "DELETE") : rows;
+    const verb = { INSERT: "Creó", UPDATE: "Cambió", DELETE: "Eliminó" };
+    const lines = shown.slice(0, 120).map(({ r, p, changedOn, late, diffs }) => {
+      const amt = p.amount ?? p.total ?? p.system;
+      const detail = diffs || (amt !== undefined && amt !== "" ? money(amt) : "");
+      return `<li class="audit-item${late ? " late" : ""}"><div class="audit-head"><b>${verb[r.action] || r.action} ${esc(AUDIT_SECTION[r.section] || r.section)}${p.date ? ` del ${nice(p.date)}` : ""}</b>${late ? '<span class="pill bad">día anterior</span>' : ""}</div><div class="audit-meta">${esc(r.who || "")} · ${nice(changedOn)} ${limaTime(r.changed_at)}${p.concept || p.product ? " · " + esc(p.concept || p.product) : ""}</div>${detail ? `<div class="audit-detail">${detail}</div>` : ""}</li>`;
+    });
+    const lateCount = rows.filter((x) => x.late).length;
+    const toggle = `<div class="f-actions"><button class="btn${audit.onlyLate ? " primary" : ""}" data-act="audit-filter" data-v="late">Solo cambios a días anteriores y borrados</button><button class="btn${audit.onlyLate ? "" : " primary"}" data-act="audit-filter" data-v="all">Todo</button><button class="btn ghost" data-act="audit-reload">Actualizar</button></div>`;
+    return `<div class="tabnote">Cada cambio queda registrado automáticamente en la nube y nadie puede borrarlo desde la app. Revisa sobre todo los cambios hechos a <b>días anteriores</b>: así se tapa un faltante.</div><div class="metrics">${metric("Cambios registrados", String(rows.length), "Últimos 300")}${metric("A días anteriores", String(lateCount), "Revisa estos primero", lateCount ? "negative-text" : "green")}</div>${card("Movimientos", toggle + (lines.length ? `<ul class="audit-list">${lines.join("")}</ul>` : '<div class="empty">No hay cambios para mostrar con este filtro.</div>'))}`;
+@@ 756 1 1
+    const sold = (s && chickenEq(s.items) > 0) || (ch && ch.sold !== undefined && ch.sold !== "") ? soldOf(t) : null;
+@@ 809 0 2
+            if (x.type === "respaldo")
+              return `<button class="row" data-act="backup"><span class="ico" style="--c:var(--warn)">${icon("down")}</span><span class="rt">${esc(x.title)}<small>${esc(x.description)}</small></span>${chev}</button>`;
+@@ 844 0 1
+    cambios: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+@@ 886 1 7
+    [
+      "Administración",
+      [
+        ["cambios", "Historial de cambios"],
+        ["permisos", "Permisos"],
+      ],
+    ],
+@@ 913 0 1
+    cambios: "oklch(0.52 0.12 25)",
+@@ 1056 1 1
+      items.filter(([k]) => (!["permisos", "cambios"].includes(k) || isAdmin) && (k === "cambios" || allowedPage(k))),
+@@ 1345 0 1
+      cambios: ["Historial de cambios", "Quién creó, cambió o borró cada registro, y cuándo."],
+@@ 1372 0 2
+            : page === "cambios"
+              ? auditPage()
+@@ 1395 1 1
+ <div class="content">${content}<p class="footer">D’Chicken Express Control v17. Los saldos bancarios son proyectados: se calculan desde los saldos iniciales, los cierres y los pagos registrados. No son conciliación bancaria ni utilidad neta.</p></div></main>
+@@ 1522 0 15
+  // Pollos vendidos: una sola cifra por día. Si hay «Ventas por producto», manda esa;
+  // si no, la cifra que se anotó a mano en Pollos.
+  function soldOf(date) {
+    const s = saleOf(date);
+    if (s && chickenEq(s.items) > 0) return chickenEq(s.items);
+    return N(db.chickens.find((x) => x.date === date)?.sold);
+  }
+  const soldFromSales = (date) => {
+    const s = saleOf(date);
+    return !!(s && chickenEq(s.items) > 0);
+  };
+  const wasteOf = (date) => fix(sum(db.chickens.find((x) => x.date === date)?.waste || [], (w) => w.qty));
+  function chickenDates() {
+    return [...new Set([...db.chickens.map((x) => x.date), ...(db.sales || []).map((x) => x.date)])].filter(Boolean);
+  }
+@@ 1529 0 1
+    const earlierDates = chickenDates().filter((d) => d >= from && d < date);
+@@ 1531 1 2
+        sum(db.chickens.filter(earlier), (x) => N(x.entered)) -
+        sum(earlierDates, (d) => soldOf(d) + wasteOf(d)) +
+@@ 1545 1 2
+        soldOf(date) -
+        wasteOf(date),
+@@ 1548 0 29
+  // Lo que debería haber al comenzar el día según los movimientos, sin contar el conteo de ese mismo día.
+  function expectedStart(d) {
+    const x = db.chickens.find((c) => c.date === d);
+    if (!x || x.stockInitial === undefined) return chickenStart(d);
+    const keep = x.stockInitial;
+    delete x.stockInitial;
+    try {
+      return chickenStart(d);
+    } finally {
+      x.stockInitial = keep;
+    }
+  }
+  // Fotografía del stock por día, para bloquear solo los cambios que EMPEORAN un stock negativo
+  // (si el stock ya estaba negativo por ventas anotadas sin compras, una compra nueva debe poder guardarse).
+  const stockSnapshot = (extra = []) =>
+    new Map([...new Set(chickenDates().concat(chickenPurchases().map((p) => p.date), extra))].map((d) => [d, chickenBalance(d)]));
+  const stockWorse = (before) =>
+    [...new Set([...before.keys(), ...chickenDates(), ...chickenPurchases().map((p) => p.date)])].some((d) => {
+      const after = chickenBalance(d);
+      return after < -0.005 && after < (before.has(d) ? before.get(d) : 0) - 0.005;
+    });
+  const WASTE_REASONS = [
+    ["quemado", "Quemado o en mal estado"],
+    ["caido", "Se cayó o se dañó"],
+    ["cortesia", "Cortesía o regalo"],
+    ["personal", "Consumo del personal"],
+    ["otro", "Otro motivo"],
+  ];
+  const wasteLabel = (k) => (WASTE_REASONS.find((x) => x[0] === k) || [k, k])[1];
+@@ 1556 1 3
+      sold = soldOf(day),
+      fromSales = soldFromSales(day),
+      waste = wasteOf(day),
+@@ 1558 0 1
+    const locked = staffLocked(day);
+@@ 1560 3 27
+    const saleForm = fromSales
+      ? `<div class="sum-list"><div class="sum-row total"><span>Vendidos según Ventas por producto</span><b>${fix(sold).toLocaleString("es-PE", { maximumFractionDigits: 2 })}</b></div></div><p class="small muted">Esta cifra sale de lo anotado en Ventas, así no se cuenta dos veces. Para cambiarla, corrige las ventas del día.</p><div class="f-actions"><button class="btn" type="button" data-act="page" data-page="ventas">Ir a Ventas</button></div>`
+      : `<form data-form="chicken-sales"><div class="fields">${field("Fecha", "date", day, "date", "required")}${field("Pollos vendidos", "sold", N(x?.sold) || "", "number", 'min="0" step="0.125" required')}</div><div class="f-actions"><button class="btn primary">Guardar ventas del día</button></div></form><p class="small muted">Si anotas las ventas por producto, esta cifra se calcula sola.</p>`;
+    const calcStart = expectedStart(day);
+    const stockForm = `<form data-form="chicken-stock"><div class="fields">${field("Fecha de inicio", "date", day, "date", "required")}${field("Stock contado al comenzar ese día", "stockInitial", x?.stockInitial ?? "", "number", 'min="0" step="1" required')}${field("Motivo si el conteo no cuadra", "countReason", x?.countReason || "", "text", 'maxlength="140" placeholder="Obligatorio si hay diferencia con lo calculado"')}</div><div class="f-actions"><button class="btn">Guardar stock inicial</button></div></form><p class="small muted">Según la app deberían haber <b>${int(calcStart)}</b> al comenzar el ${nice(day)}. Si cuentas otra cifra, la diferencia queda registrada.</p>`;
+    const wasteForm = `<form data-form="chicken-waste"><div class="fields">${field("Fecha", "date", day, "date", "required")}${field("Cantidad de pollos", "qty", "", "number", 'min="0.125" step="0.125" required placeholder="Ej.: 1 o 0.5"')}<div class="field"><label for="fld-waste-reason">Motivo</label><select id="fld-waste-reason" name="reason" required>${WASTE_REASONS.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></div>${field("Detalle (opcional)", "note", "", "text", 'maxlength="140" placeholder="Ej.: se quemó en el horno 2"')}</div><div class="f-actions"><button class="btn primary">Registrar merma</button></div></form>`;
+    const wasteRows = sort(db.chickens.filter((c) => (c.waste || []).length || N(c.countDiff)))
+      .slice(0, 30)
+      .flatMap((c) => [
+        ...(c.waste || []).map(
+          (w) =>
+            `<tr><td>${nice(c.date)}</td><td>${fix(w.qty)}</td><td>${esc(wasteLabel(w.reason))}${w.note ? `<div class="small">${esc(w.note)}</div>` : ""}</td><td>${w.by ? esc(w.by) : ""}</td><td>${locked && c.date === day ? "" : `<button class="action-link red" data-act="waste-delete" data-date="${c.date}" data-id="${esc(w.id)}">Anular</button>`}</td></tr>`,
+        ),
+        ...(N(c.countDiff)
+          ? [
+              `<tr><td>${nice(c.date)}</td><td>${N(c.countDiff) > 0 ? "+" : ""}${fix(c.countDiff)}</td><td>Diferencia de conteo${c.countReason ? `<div class="small">${esc(c.countReason)}</div>` : ""}</td><td>${c.countBy ? esc(c.countBy) : ""}</td><td></td></tr>`,
+            ]
+          : []),
+      ]);
+    const m = day.slice(0, 7);
+    const monthWaste = fix(
+      sum(
+        db.chickens.filter((c) => (c.date || "").slice(0, 7) === m),
+        (c) => wasteOf(c.date) - Math.min(0, N(c.countDiff)),
+      ),
+    );
+    const sales = sort(chickenDates().map((d) => ({ date: d })).filter((p) => soldOf(p.date) > 0 || wasteOf(p.date) > 0 || db.chickens.find((c) => c.date === p.date)?.stockInitial !== undefined))
+@@ 1564 1 1
+      .map((p) => `<tr><td>${nice(p.date)}</td><td>${fix(soldOf(p.date))}</td><td>${wasteOf(p.date) ? fix(wasteOf(p.date)) : "—"}</td><td>${int(chickenBalance(p.date))}</td></tr>`);
+@@ 1571 1 1
+    return `<div class="tabnote"><b>Así funciona:</b> fija una sola vez el stock al comenzar un día. Cada compra suma pollos; cada venta diaria resta pollos. El importe de compras aparece en Gastos y descuenta bancos/caja según cómo pagaste. Los ingresos antiguos siguen contándose.</div><div class="metrics">${metric("Stock inicial hoy", int(start) + " pollos", "Se arrastra del día anterior")}${metric("Comprados hoy", int(received) + " pollos", "Sumados automáticamente")}${metric("Vendidos hoy", fix(sold) + " pollos", fromSales ? "Desde Ventas por producto" : "Ingresas una sola cifra")}${metric("Merma hoy", fix(waste) + " pollos", "Merma del mes: " + monthWaste, waste > 0 ? "negative-text" : "")}${metric("Disponibles", int(left) + " pollos", "Stock calculado", left < 0 ? "negative-text" : "green")}</div>${locked ? `<div class="alert">Este día ya está cerrado. Solo el administrador puede cambiar registros de días anteriores.</div>` : ""}<div class="layout-grid"><div>${card("Ventas del " + nice(day), saleForm, fromSales ? "" : "Solo indica cuántos pollos se vendieron.")}${card("Merma y cortesías", wasteForm, "Cada pollo que no se vende ni queda en stock: quemado, caído, regalado o comido por el personal.")}${card("Stock inicial", stockForm, "Regístralo al contar los pollos. Si no cuadra con lo calculado, explica por qué.")}</div><div>${card(purchaseEdit ? "Editar compra" : "Compra de pollos", formPurchase, "Solo cantidad, precio total y formas de pago. Esta compra se suma al stock y al gasto automáticamente.")}</div></div>${card("Merma y diferencias de conteo", table(["Fecha", "Pollos", "Motivo", "Registró", "Acción"], wasteRows), "Lo que se pierde, con motivo y responsable.")}${card("Historial de compras", table(["Fecha", "Pollos", "Precio total", "Pago", "Acción"], buys), "Las compras se suman al stock una sola vez.")}${card("Historial de ventas y existencias", table(["Fecha", "Vendidos", "Merma", "Disponible"], sales), "Consulta los movimientos anteriores.")}`;
+@@ 1576 0 3
+  // Una compra puede venir de un solo artículo (shoppingId) o de varios pagados juntos (shoppingItems).
+  const shopIdsOf = (p) =>
+    p && Array.isArray(p.shoppingItems) ? p.shoppingItems.map((x) => x.id) : p?.shoppingId ? [p.shoppingId] : [];
+@@ 1577 3 6
+    sum(db.purchases, (p) =>
+      Array.isArray(p.shoppingItems)
+        ? N(p.shoppingItems.find((x) => x.id === item.id)?.qty)
+        : p.shoppingId === item.id
+          ? N(p.qty)
+          : 0,
+@@ 1646 0 2
+  const groupBarHTML = (n) =>
+    `<span><b>${int(n)}</b> ${n === 1 ? "seleccionado" : "seleccionados"}</span><button class="btn sm primary" type="button" data-act="shop-group">Pagar juntos</button>`;
+@@ 1651 2 7
+      bought = sort(db.purchases.filter((x) => shopIdsOf(x).length && x.date === day));
+    const paidToday = ledgers().filter(
+      (x) => x.date === day && x.purchaseId && shopIdsOf(purchaseBy(x.purchaseId)).length,
+    );
+    for (const id of [...shoppingSel]) if (!pending.some((x) => x.id === id)) shoppingSel.delete(id);
+    if (!shoppingSel.size) shoppingGroup = false;
+    const chosen = pending.filter((x) => shoppingSel.has(x.id));
+@@ 1679 1 1
+          return `<div class="shopping-item${shoppingSel.has(x.id) ? " sel" : ""}"><div class="shopping-check"><button class="check-btn${shoppingSel.has(x.id) ? " on" : ""}" type="button" data-act="shop-sel" data-id="${esc(x.id)}" aria-pressed="${shoppingSel.has(x.id)}" aria-label="Seleccionar ${esc(x.product)} para pagar junto con otros">✓</button></div><div class="shopping-info"><b>${esc(x.product)}</b><span>${esc(shoppingRemaining(x))} ${esc(x.unit || "und")} ${state === "partial" ? "<em>· Compra parcial</em>" : ""}${x.note ? ` · ${esc(x.note)}` : ""}</span></div><button class="btn sm primary" data-act="shop-pick" data-id="${esc(x.id)}">Comprar</button><button class="action-link red" data-act="shop-delete" data-id="${esc(x.id)}" title="Quitar pendiente">✕</button></div>`;
+@@ 1689 1 1
+      db.purchases.filter((p) => shopIdsOf(p).some((id) => planned.some((x) => x.id === id))),
+@@ 1692 1 1
+        `<tr><td>${nice(p.date)}</td><td>${esc(p.product)}</td><td>${Array.isArray(p.shoppingItems) ? esc(p.shoppingItems.map((i) => i.qty + " " + (i.unit || "und")).join(" · ")) : esc(p.qty) + " " + esc(planned.find((x) => x.id === p.shoppingId)?.unit || "und")}</td><td>${money(p.total)}</td><td>${esc(paymentSummary([...(p.paymentParts || []), ...(p.additionalParts || []), ...paymentsOf(p.id).flatMap(normalizeParts)]))}</td></tr>`,
+@@ 1707 0 8
+    const groupForm =
+      shoppingGroup && chosen.length
+        ? card(
+            "Pagar juntos · " + int(chosen.length) + (chosen.length === 1 ? " producto" : " productos"),
+            `<form data-form="shopping-buy-group"><input type="hidden" name="ids" value="${esc(chosen.map((x) => x.id).join(","))}"><ul class="group-items">${chosen.map((x) => `<li><b>${esc(x.product)}</b><span>${esc(shoppingRemaining(x))} ${esc(x.unit || "und")}</span></li>`).join("")}</ul><div class="fields">${field("Fecha real de compra", "date", today(), "date", "required")}${field("Costo TOTAL pagado por todos S/", "total", "", "number", 'min="0.01" step="0.01" required inputmode="decimal"')}${paymentPartsUI([])}${field("Proveedor o tienda (opcional)", "person", "", "text", 'maxlength="100"')}${field("Nota (opcional)", "note", "", "text", 'maxlength="140"')}</div><div class="callout">✔ Se registra <b>una sola compra y un solo pago</b> por el total, y estos productos pasan a comprados con la cantidad completa. Si de alguno compraste solo una parte, quítalo de la selección y usa su botón <b>Comprar</b>.</div><div class="f-actions"><button class="btn primary" type="submit">✓ Confirmar compra y pago</button><button class="btn" type="button" data-act="shop-group-cancel">Cancelar</button></div></form>`,
+            "No se guardará nada hasta pulsar Confirmar.",
+          )
+        : "";
+@@ 1720 1 1
+    return `<div class="shopping-hero"><div><span class="hero-kicker">OPERACIÓN · ABASTECIMIENTO</span><h2>Tu mercado, bajo control.</h2><p>Planifica por WhatsApp, compra con un toque y controla los saldos sin duplicar gastos.</p></div></div><div class="shopping-daybar"><b>Lista programada para</b><input id="shopping-day" type="date" value="${shoppingDay}"><span class="shopping-status">${pending.length} por comprar</span></div>${summary}<div class="shopping-grid"><div>${card("Pendientes por comprar", `<div class="shopping-list">${listRows}</div><div class="shop-groupbar" id="shop-groupbar"${shoppingSel.size && !shoppingGroup ? "" : " hidden"}>${groupBarHTML(shoppingSel.size)}</div>`, "¿Pagaste varios productos juntos? Marca sus círculos y pon un solo precio. Para uno solo, pulsa Comprar.")}${groupForm}${buyForm}${completed.length ? card("Productos comprados ✓", `<div class="shopping-list">${completedRows}</div>`, "Los productos completados pasan aquí automáticamente.") : ""}${card("Historial de esta lista", recent, "Cada compra genera un único pago; puedes corregirla en Historial compras.")}<div class="shopping-breakdown">${metric("Efectivo (hoy)", money(cashBought))}${metric("BCP (hoy)", money(bcpBought))}${metric("BBVA (hoy)", money(bbvaBought))}</div></div><div>${planForm}${
+@@ 2040 0 11
+  // El personal solo registra o corrige hoy y ayer; lo anterior lo cambia el administrador.
+  // (La base de datos aplica la misma regla: dchicken_staff_date_ok.)
+  function staffLocked(d) {
+    if (!window.DChickenCloud?.isActive() || window.DChickenCloud.isAdmin()) return false;
+    return !d || d < plusDays(today(), -1);
+  }
+  function guardDate(d, what = "este registro") {
+    if (staffLocked(d))
+      throw Error("Solo el administrador puede cambiar " + what + " de días anteriores (" + nice(d) + ").");
+  }
+  const whoAmI = () => window.DChickenCloud?.userLabel?.() || "";
+@@ 2052 0 1
+          guardDate(date(fd), "las ventas");
+@@ 2151 0 1
+          guardDate(day, "el cierre de caja");
+@@ 2219 0 40
+        case "shopping-buy-group": {
+          const ids = read(fd, "ids").split(",").filter(Boolean);
+          const items = ids
+            .map((id) => db.shoppingLists.find((x) => x.id === id))
+            .filter((x) => x && shoppingRemaining(x) > 0.000001);
+          if (!items.length) throw Error("Selecciona al menos un producto pendiente.");
+          if (items.length !== ids.length) throw Error("Algún producto ya se compró o se quitó. Revisa la selección.");
+          const cost = amount(fd, "total"),
+            parts = splitFrom(fd, cost),
+            dateBought = date(fd);
+          let product = (items.length > 1 ? items.length + " productos: " : "") + items.map((x) => x.product).join(", ");
+          if (product.length > 100) product = product.slice(0, 99) + "…";
+          db.purchases.push({
+            id: uid(),
+            date: dateBought,
+            type: "general",
+            product,
+            qty: 1,
+            unitCost: cost,
+            total: cost,
+            person: read(fd, "person").slice(0, 100),
+            note: read(fd, "note").slice(0, 140),
+            shoppingItems: items.map((x) => ({
+              id: x.id,
+              product: x.product,
+              qty: shoppingRemaining(x),
+              unit: x.unit || "und",
+            })),
+            paymentParts: parts,
+            created: Date.now(),
+          });
+          shoppingSel.clear();
+          shoppingGroup = false;
+          shoppingPick = null;
+          save();
+          render();
+          toast(items.length + " productos registrados en una sola compra de " + money(cost) + ".");
+          break;
+        }
+
+@@ 2259 0 2
+          guardDate(date(fd), "gastos");
+          if (edit?.type === "expense") guardDate(db.expenses.find((x) => x.id === edit.id)?.date, "gastos");
+@@ 2286 0 1
+          guardDate(d, "el stock");
+@@ 2287 0 8
+          const hasBase = db.chickens.some((c) => c.stockInitial !== undefined && c.date < d) || chickenPurchases().some((p) => p.date < d);
+          const expected = expectedStart(d),
+            diff = hasBase ? fix(stock - expected) : 0,
+            reason = read(fd, "countReason").slice(0, 140);
+          if (Math.abs(diff) > 0.005 && !reason)
+            throw Error(
+              "Contaste " + stock + " pero deberían haber " + fix(expected) + ". Escribe el motivo de la diferencia.",
+            );
+@@ 2295 0 9
+          if (Math.abs(diff) > 0.005) {
+            x.countDiff = diff;
+            x.countReason = reason;
+            x.countBy = whoAmI();
+          } else {
+            delete x.countDiff;
+            delete x.countReason;
+            delete x.countBy;
+          }
+@@ 2302 1 4
+            sold = amount(fd, "sold", true);
+          guardDate(d, "las ventas de pollos");
+          if (soldFromSales(d))
+            throw Error("Ese día ya tiene Ventas por producto: los pollos vendidos se calculan desde ahí.");
+@@ 2318 0 2
+          const stockBefore = stockSnapshot([d]);
+          x.sold = prevSold;
+@@ 2319 1 1
+          if (stockWorse(stockBefore)) {
+@@ 2326 0 26
+          break;
+        }
+        case "chicken-waste": {
+          const d = date(fd),
+            n = amount(fd, "qty"),
+            reason = read(fd, "reason");
+          guardDate(d, "la merma");
+          if (!WASTE_REASONS.some(([k]) => k === reason)) throw Error("Elige el motivo de la merma.");
+          if (n > chickenBalance(d) + 0.005)
+            throw Error("No hay " + n + " pollos disponibles ese día. Revisa el stock o las compras.");
+          let x = db.chickens.find((c) => c.date === d);
+          if (!x) {
+            x = { date: d, entered: 0, created: Date.now() };
+            db.chickens.push(x);
+          }
+          (x.waste ||= []).push({
+            id: uid(),
+            qty: n,
+            reason,
+            note: read(fd, "note").slice(0, 140),
+            by: whoAmI(),
+            created: Date.now(),
+          });
+          save();
+          render();
+          toast("Merma registrada: " + n + " pollo(s) · " + wasteLabel(reason) + ".");
+@@ 2353 0 1
+          const stockBefore = type === "pollo" ? stockSnapshot([d]) : null;
+@@ 2364 3 1
+            stockWorse(stockBefore)
+@@ 2590 0 33
+      case "shop-sel": {
+        const id = b.dataset.id;
+        if (shoppingSel.has(id)) shoppingSel.delete(id);
+        else shoppingSel.add(id);
+        if (shoppingGroup) {
+          if (!shoppingSel.size) shoppingGroup = false;
+          render();
+          break;
+        }
+        const on = shoppingSel.has(id);
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-pressed", String(on));
+        b.closest(".shopping-item")?.classList.toggle("sel", on);
+        const bar = document.getElementById("shop-groupbar");
+        if (bar) {
+          bar.hidden = !shoppingSel.size;
+          bar.innerHTML = groupBarHTML(shoppingSel.size);
+        }
+        break;
+      }
+      case "shop-group":
+        if (!shoppingSel.size) return toast("Marca primero los productos que pagaste juntos.", true);
+        shoppingGroup = true;
+        shoppingPick = null;
+        render();
+        document
+          .querySelector('form[data-form="shopping-buy-group"]')
+          ?.scrollIntoView({ block: "start", behavior: "smooth" });
+        break;
+      case "shop-group-cancel":
+        shoppingGroup = false;
+        render();
+        break;
+@@ 2592 0 1
+        shoppingGroup = false;
+@@ 2609 0 1
+        shoppingSel.delete(id);
+@@ 2664 0 3
+        const recPre = db[getTable(b.dataset.type)]?.find((x) => x.id === b.dataset.id);
+        if (b.dataset.type === "expense" && staffLocked(recPre?.date))
+          return toast("Solo el administrador puede cambiar gastos de días anteriores.", true);
+@@ 2674 0 21
+        break;
+      }
+      case "audit-filter":
+        audit.onlyLate = b.dataset.v === "late";
+        render();
+        break;
+      case "audit-reload":
+        audit.rows = null;
+        audit.error = "";
+        render();
+        break;
+      case "waste-delete": {
+        const c = db.chickens.find((x) => x.date === b.dataset.date);
+        if (!c?.waste) return;
+        if (staffLocked(c.date)) return toast("Solo el administrador puede anular merma de días anteriores.", true);
+        if (!confirm("¿Anular este registro de merma?")) return;
+        c.waste = c.waste.filter((w) => w.id !== b.dataset.id);
+        if (!c.waste.length) delete c.waste;
+        save();
+        render();
+        toast("Merma anulada.");
+@@ 2797 1 5
+    try {
+      localStorage.setItem(BACKUP_KEY, today());
+    } catch (e) {}
+    toast("Respaldo descargado. Súbelo a Drive o envíatelo por correo.");
+    render();
+@@ 2807 0 2
+      shoppingGroup = false;
+      shoppingSel.clear();

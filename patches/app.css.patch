@@ -1,0 +1,29 @@
+#base 203195553774b5e075bdf708b86b6d6beedef351 f23fe3c9fb8833e95151fb129880f6396f6796ed
+@@ 354 0 10
+.check-btn.on{background:var(--tint);box-shadow:none;color:var(--on-tint);font-size:15px;font-weight:700}
+.shopping-item.sel .shopping-info b{font-weight:600}
+.shop-groupbar{position:sticky;bottom:16px;z-index:46;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:10px 10px 10px 16px;border-radius:999px;background:var(--chrome);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--shadow-float),0 0 0 .5px var(--sep);animation:fade .25s var(--ease-out) both}
+.shop-groupbar[hidden]{display:none}
+body:has(.shop-groupbar:not([hidden])) .quick-fab{display:none}
+.shop-groupbar span{font-size:14.5px;color:var(--ink-2)}
+.shop-groupbar b{color:var(--ink);font-weight:650}
+.group-items{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:6px}
+.group-items li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:var(--fill)}
+.group-items span{color:var(--ink-2);font-size:13.5px;white-space:nowrap}
+@@ 481 1 1
+@media (max-width:820px){.shop-groupbar{bottom:calc(72px + env(safe-area-inset-bottom))}
+@@ 551 0 14
+/* v17: registros que no se guardaron, historial de cambios */
+.fail-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.fail-item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:var(--fill)}
+.fail-item div{display:grid;gap:2px;min-width:0}
+.fail-item small{color:var(--bad-ink);font-size:13px;line-height:1.35}
+.fail-item .btn{flex:none}
+tr.late td{background:color-mix(in oklch,var(--bad-soft) 55%,transparent)}
+.audit-list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+.audit-item{padding:11px 13px;border-radius:12px;background:var(--fill);display:grid;gap:3px}
+.audit-item.late{background:color-mix(in oklch,var(--bad-soft) 70%,var(--fill))}
+.audit-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.audit-meta{font-size:13px;color:var(--ink-2,var(--muted))}
+.audit-detail{font-size:13.5px;line-height:1.45;font-variant-numeric:tabular-nums}
+

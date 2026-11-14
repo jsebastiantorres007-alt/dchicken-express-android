@@ -1,0 +1,192 @@
+#base 02b90ae0d6c3e673a7cb0942e6b68f8fe8e2e72c 5d5baaf1c20963586f23dc502c4d7744840afc2d
+@@ 263 0 24
+  async function auditLog() {
+    if (!active || role !== "admin") throw Error("Solo el administrador ve el historial.");
+    const r = await client
+      .from("record_audit")
+      .select("section,record_id,action,old_payload,new_payload,changed_by,changed_at")
+      .eq("business_id", business.id)
+      .order("changed_at", { ascending: false })
+      .limit(300);
+    if (r.error) throw r.error;
+    const roles = new Map();
+    const m = await client.from("business_members").select("user_id,role").eq("business_id", business.id);
+    for (const x of m.data || []) roles.set(x.user_id, x.role);
+    return (r.data || []).map((x) => ({
+      ...x,
+      who:
+        x.changed_by === user?.id
+          ? "Tú"
+          : roles.get(x.changed_by) === "admin"
+            ? "Administrador"
+            : roles.get(x.changed_by) === "staff"
+              ? "Personal"
+              : "Sistema",
+    }));
+  }
+@@ 472 0 39
+  // Errores por registro: si un registro falla, los demás se guardan igual y solo ese queda pendiente.
+  const failed = new Map();
+  const SECTION_LABEL = {
+    closures: "Cierre de caja",
+    expenses: "Gasto",
+    chickens: "Pollos",
+    purchases: "Compra",
+    payments: "Pago",
+    sunat: "SUNAT",
+    historical: "Personal / local",
+    bankSettings: "Saldo de banco",
+    bankTransactions: "Movimiento de banco",
+    shoppingLists: "Lista de compras",
+    alertSettings: "Alerta de stock",
+    sales: "Ventas por producto",
+  };
+  function describe(r) {
+    const p = r.payload || {};
+    const bits = [SECTION_LABEL[r.section] || r.section];
+    if (p.date) bits.push(p.date.split("-").reverse().join("/"));
+    const what = p.concept || p.product || p.person || "";
+    if (what) bits.push(String(what).slice(0, 40));
+    const amt = p.amount ?? p.total ?? p.system;
+    if (amt !== undefined && amt !== "") bits.push("S/ " + Number(amt).toFixed(2));
+    return bits.join(" · ");
+  }
+  function friendly(e) {
+    const msg = String(e?.message || e || "");
+    if (e?.code === "42501" || /row-level security/i.test(msg))
+      return "No tienes permiso para guardar este cambio. Los días anteriores solo los cambia el administrador.";
+    if (e?.code === "23514" || /check constraint/i.test(msg))
+      return "La nube no acepta este tipo de registro. Avisa al administrador.";
+    return msg || "Fallo de sincronización";
+  }
+  function setFailure(k, r, why) {
+    const isNew = !failed.has(k) || failed.get(k).why !== why;
+    failed.set(k, { section: r.section, record_id: r.record_id, label: describe(r), why });
+    return isNew;
+  }
+@@ 476 1 2
+    let count = 0,
+      fresh = 0;
+@@ 481 0 6
+        // Un fallo que el usuario ya corrigió en su dispositivo deja de contarse.
+        for (const k of [...failed.keys()]) {
+          const t = target.get(k),
+            s = shadow.get(k);
+          if ((!t && !s) || (t && s && equals(s.payload, t.payload))) failed.delete(k);
+        }
+@@ 488 12 19
+          try {
+            const r = await client
+              .from("business_records")
+              .delete()
+              .eq("business_id", business.id)
+              .eq("section", old.section)
+              .eq("record_id", old.record_id)
+              .eq("revision", old.revision)
+              .select("revision");
+            if (r.error) throw r.error;
+            if (r.data.length !== 1)
+              throw Error("No se pudo eliminar: alguien lo cambió desde otro dispositivo o no tienes permiso.");
+            shadow.delete(k);
+            failed.delete(k);
+            count++;
+          } catch (e) {
+            if (isNetErr(e)) throw e;
+            if (setFailure(k, old, "Eliminar: " + friendly(e))) fresh++;
+          }
+@@ 503 15 28
+          try {
+            let res;
+            if (old) {
+              res = await client
+                .from("business_records")
+                .update({ payload: r.payload })
+                .eq("business_id", business.id)
+                .eq("section", r.section)
+                .eq("record_id", r.record_id)
+                .eq("revision", old.revision)
+                .select("revision");
+            } else {
+              res = await client
+                .from("business_records")
+                .insert({ business_id: business.id, ...r, payload: r.payload })
+                .select("revision");
+            }
+            if (res.error) throw res.error;
+            if (res.data.length !== 1)
+              throw Error(
+                "No se pudo actualizar: alguien lo cambió desde otro dispositivo o no tienes permiso para modificarlo.",
+              );
+            shadow.set(k, { ...r, revision: res.data[0].revision });
+            failed.delete(k);
+            count++;
+          } catch (e) {
+            if (isNetErr(e)) throw e;
+            if (setFailure(k, r, friendly(e))) fresh++;
+@@ 519 4 0
+@@ 525 1 0
+@@ 529 4 15
+      if (failed.size) {
+        errorState = failed.size === 1 ? "1 registro no se guardó" : failed.size + " registros no se guardaron";
+        if (fresh)
+          window.DChickenBridge.notify(
+            "No se guardó en la nube: " + [...failed.values()][failed.size - 1].why + " Abre «Cuenta» para ver cuál.",
+            true,
+          );
+        else if (count) window.DChickenBridge.notify("Guardado en la nube. Pendiente: " + errorState + ".");
+      } else {
+        errorState = "";
+        if (count)
+          window.DChickenBridge.notify(
+            wasOffline ? "Conexión recuperada: tus cambios ya están en la nube." : "Guardado en la nube.",
+          );
+      }
+@@ 534 1 1
+      // Sin internet u otro fallo general: los cambios quedan en el dispositivo hasta subirlos.
+@@ 545 1 1
+        errorState = friendly(e);
+@@ 553 0 19
+  }
+  // Descarta solo el cambio que falló: el registro vuelve a como está en la nube.
+  async function discardOne(k) {
+    const f = failed.get(k);
+    if (!f) return;
+    const local = window.DChickenBridge.getLocal();
+    const list = (local[f.section] ||= []);
+    const i = list.findIndex((r) => idOf(f.section, r) === f.record_id);
+    const cloudCopy = shadow.get(k);
+    if (cloudCopy) {
+      if (i >= 0) list[i] = structuredClone(cloudCopy.payload);
+      else list.push(structuredClone(cloudCopy.payload));
+    } else if (i >= 0) list.splice(i, 1);
+    failed.delete(k);
+    window.DChickenBridge.setFromCloud(local);
+    desired = local;
+    if (!failed.size) errorState = "";
+    await runSync();
+    if (!failed.size && !errorState) await refresh();
+@@ 567 0 6
+    const failList = [...failed.entries()]
+      .map(
+        ([k, f]) =>
+          `<li class="fail-item"><div><b>${escapeHTML(f.label)}</b><small>${escapeHTML(f.why)}</small></div><button class="btn" data-cloud="discardone" data-key="${escapeHTML(k)}">Descartar este cambio</button></li>`,
+      )
+      .join("");
+@@ 568 1 1
+      ? `<div class="cloud-message error">Cambios sin guardar: ${escapeHTML(errorState)}.${failList ? " El resto de tus registros sí se guardó." : " Descarga un respaldo antes de descartarlos."}</div>${failList ? `<ul class="fail-list">${failList}</ul>` : ""}<div class="cloud-actions"><button class="btn danger" data-cloud="discard">Descartar todos mis cambios y cargar la nube</button></div>`
+@@ 573 1 1
+      `<h3>Cuenta del negocio</h3><div class="cloud-meta"><span class="cloud-chip">${escapeHTML(business.name)}</span><span class="cloud-chip">${role === "admin" ? "Administrador" : "Colaborador"}</span></div><p>${escapeHTML(user.email || "")}</p><p><span class="sync-dot ${errorState ? "problem" : ""}"></span>${errorState ? "Hay cambios sin sincronizar" : offline ? "Esperando conexión" : syncing || desired ? "Guardando cambios…" : "Registros sincronizados"}</p>${pending}<div class="cloud-actions"><button class="btn primary" data-cloud="syncnow">${errorState ? "Reintentar guardar" : "Actualizar desde la nube"}</button><button class="btn" data-cloud="chooseorg">Cambiar negocio</button></div>${role === "admin" ? '<hr><h3>Mi familia</h3><p>Genera un código para que tus familiares o tu personal entren con sus propias cuentas. Cada código sirve para una sola persona: al usarse, deja de funcionar.</p><div class="cloud-actions"><button class="btn" data-cloud="invite">Generar código de acceso</button></div>' : ""}<hr><div class="cloud-actions"><button class="btn" data-cloud="close">Volver al panel</button><button class="btn danger" data-cloud="logout">Cerrar sesión</button></div><p class="cloud-caption">Tu información se guarda en Supabase. Para preservar una copia extra, pulsa «Respaldo» en el panel.</p>`,
+@@ 667 0 1
+          failed.clear();
+@@ 672 0 6
+        case "discardone": {
+          await discardOne(b.dataset.key);
+          open();
+          window.DChickenBridge.notify(failed.size ? "Cambio descartado." : "Cambio descartado. Todo está guardado en la nube.");
+          break;
+        }
+@@ 675 0 1
+            desired = window.DChickenBridge.getLocal();
+@@ 874 0 2
+    userLabel: () => String(user?.email || "").split("@")[0],
+    auditLog,
