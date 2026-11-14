@@ -71,17 +71,17 @@
     const status = $("[data-open-status]");
     if (status)
       status.textContent = h.open
-        ? "Abierto ahora · hasta las 11 p. m."
-        : `Cerrado ahora · abrimos ${h.when} a las 12 m.`;
+        ? "Abierto ahora · hasta las 11:00 p.m."
+        : `Cerrado ahora · abrimos ${h.when} a las 12:00 p.m.`;
     $(".hero .dot")?.classList.toggle("open", h.open);
     $(".hero .dot")?.classList.toggle("closed", !h.open);
     const note = cart && $("[data-hours]", cart);
     if (note) {
       if (!h.open) {
-        note.innerHTML = `<b>Ahora estamos cerrados.</b> Abrimos ${h.when} a las 12 m. Puedes dejar tu pedido y te respondemos apenas abramos.`;
+        note.innerHTML = `<b>Ahora estamos cerrados.</b> Abrimos ${h.when} a las 12:00 p.m. Puedes dejar tu pedido y te respondemos apenas abramos.`;
         note.hidden = false;
       } else if (h.left <= LAST_CALL) {
-        note.innerHTML = `<b>Cerramos a las 11 p. m.</b> (en ${h.left} min). Envía tu pedido pronto.`;
+        note.innerHTML = `<b>Cerramos a las 11:00 p.m.</b> (en ${h.left} min). Envía tu pedido pronto.`;
         note.hidden = false;
       } else note.hidden = true;
       const label = $("[data-send-label]", cart);
